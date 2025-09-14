@@ -65,7 +65,7 @@ const round = (x: number, mode: Rounding) =>
 const fmt = (n: number) => n.toLocaleString("ko-KR");
 
 // 근로소득공제(총급여 기준, 2023~2024)
-function earnedIncomeDeduction(totalSalary: number): number {
+export function earnedIncomeDeduction(totalSalary: number): number {
     if (totalSalary <= 5_000_000) return totalSalary * 0.70;
     if (totalSalary <= 15_000_000) return 3_500_000 + (totalSalary - 5_000_000) * 0.40;
     if (totalSalary <= 45_000_000) return 7_500_000 + (totalSalary - 15_000_000) * 0.15;
@@ -74,9 +74,48 @@ function earnedIncomeDeduction(totalSalary: number): number {
 }
 
 // 누진공제식 산출세액
-function progressiveTaxByQuickDeduction(annualTaxBase: number): number {
-    const bracket = CONFIG.tax.brackets.find(b => annualTaxBase <= b.upTo)!;
-    return Math.max(0, annualTaxBase * bracket.rate - bracket.deduction);
+export function progressiveTaxByQuickDeduction(annualTaxBase: number): number {
+    const bracketIndex = CONFIG.tax.brackets.findIndex(b => annualTaxBase <= b.upTo)
+    const bracket = CONFIG.tax.brackets[bracketIndex] || { upTo: 0, rate: 0, deduction: 0 };
+    const prevBracket = CONFIG.tax.brackets[bracketIndex - 1] || { upTo: 0, rate: 0, deduction: 0 };
+    return Math.max(0, (annualTaxBase - prevBracket.upTo) * bracket.rate + bracket.deduction);
+}
+
+// 근로소득세 세액공제 한도 계산 (총급여액 기준)
+export function earnedIncomeTaxDeductionLimit(totalSalary: number): number {
+    if (totalSalary <= 33_000_000) {
+        return 740_000; // 74만원
+    }
+    
+    if (totalSalary <= 70_000_000) {
+        const deduction = 740_000 - (totalSalary - 33_000_000) * 0.008;
+        return Math.max(660_000, deduction); // 최소 66만원
+    }
+    
+    if (totalSalary <= 120_000_000) {
+        const deduction = 660_000 - (totalSalary - 70_000_000) * 0.5;
+        return Math.max(500_000, deduction); // 최소 50만원
+    }
+    
+    const deduction = 500_000 - (totalSalary - 120_000_000) * 0.5;
+    return Math.max(200_000, deduction); // 최소 20만원
+}
+
+// 근로소득세 세액공제 계산 (산출세액 기준)
+export function earnedIncomeTaxDeduction(calculatedTax: number): number {
+    if (calculatedTax <= 1_300_000) {
+        return calculatedTax * 0.55; // 55%
+    }
+    
+    return 715_000 + (calculatedTax - 1_300_000) * 0.30; // 71만5천원 + 초과분의 30%
+}
+
+// 근로소득세 세액공제 (최종 적용)
+export function applyEarnedIncomeTaxDeduction(calculatedTax: number, totalSalary: number): number {
+    const deductionAmount = earnedIncomeTaxDeduction(calculatedTax);
+    const deductionLimit = earnedIncomeTaxDeductionLimit(totalSalary);
+    
+    return Math.min(deductionAmount, deductionLimit);
 }
 
 // ------------------------------
@@ -94,12 +133,12 @@ function calcNetByAnnualKRW(annualGross: number) {
         Math.max(monthlyTaxableBase, CONFIG.social.nationalPension.monthlyMinBase),
         CONFIG.social.nationalPension.monthlyMaxBase
     );
-    const np = npBase * CONFIG.social.nationalPension.rate;
-    const hi = monthlyTaxableBase * CONFIG.social.healthInsurance.rate;
-    const ltc = hi * CONFIG.social.healthInsurance.longTermCare.rateOnHealth;
-    const ei = monthlyTaxableBase * CONFIG.social.employmentInsurance.rate;
+    const np = npBase * CONFIG.social.nationalPension.rate; // 국민연금
+    const hi = monthlyTaxableBase * CONFIG.social.healthInsurance.rate; // 건강보험
+    const ltc = hi * CONFIG.social.healthInsurance.longTermCare.rateOnHealth; // 장기요양
+    const ei = monthlyTaxableBase * CONFIG.social.employmentInsurance.rate; // 고용보험
 
-    const monthlySocialTotal = np + hi + ltc + ei;
+    const monthlySocialTotal = np + hi + ltc + ei; // 사회보험 월 총액
     const annualSocialTotal = monthlySocialTotal * P;
 
     // (2) 과세표준 만들기
@@ -121,11 +160,18 @@ function calcNetByAnnualKRW(annualGross: number) {
         earnedIncome - basicPersonalDeduction - annualSocialTotal
     );
 
+    console.log("annualTaxable", annualTaxable);
+
     // (3) 소득세(누진공제식) + 지방소득세
     const incomeTax = progressiveTaxByQuickDeduction(annualTaxable);
     const localTax = Math.floor(incomeTax * CONFIG.tax.localOnIncomeTax);
+    
+    // 근로소득세액공제 적용
+    const taxDeduction = applyEarnedIncomeTaxDeduction(incomeTax, annualTotalSalary);
+    const finalIncomeTax = Math.max(0, incomeTax - taxDeduction);
+    const finalLocalTax = Math.floor(finalIncomeTax * CONFIG.tax.localOnIncomeTax);
 
-    const annualTaxTotal = incomeTax + localTax;
+    const annualTaxTotal = finalIncomeTax + finalLocalTax;
     const monthlyTaxTotal = annualTaxTotal / P;
 
     // (4) 실수령 = 월 총액 - (사회보험 월) - (세금 월)
@@ -169,7 +215,10 @@ function calcNetByAnnualKRW(annualGross: number) {
             basicPersonalDeduction: round(basicPersonalDeduction, CONFIG.rounding),
             annualTaxable: round(annualTaxable, CONFIG.rounding),
             annualIncomeTax: round(incomeTax, CONFIG.rounding),
-            annualLocalTax: round(localTax, CONFIG.rounding)
+            annualLocalTax: round(localTax, CONFIG.rounding),
+            taxDeduction: round(taxDeduction, CONFIG.rounding),
+            finalIncomeTax: round(finalIncomeTax, CONFIG.rounding),
+            finalLocalTax: round(finalLocalTax, CONFIG.rounding)
         }
     };
 }
