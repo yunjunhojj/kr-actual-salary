@@ -86,17 +86,17 @@ export function earnedIncomeTaxDeductionLimit(totalSalary: number): number {
     if (totalSalary <= 33_000_000) {
         return 740_000; // 74만원
     }
-    
+
     if (totalSalary <= 70_000_000) {
         const deduction = 740_000 - (totalSalary - 33_000_000) * 0.008;
         return Math.max(660_000, deduction); // 최소 66만원
     }
-    
+
     if (totalSalary <= 120_000_000) {
         const deduction = 660_000 - (totalSalary - 70_000_000) * 0.5;
         return Math.max(500_000, deduction); // 최소 50만원
     }
-    
+
     const deduction = 500_000 - (totalSalary - 120_000_000) * 0.5;
     return Math.max(200_000, deduction); // 최소 20만원
 }
@@ -106,7 +106,7 @@ export function earnedIncomeTaxDeduction(calculatedTax: number): number {
     if (calculatedTax <= 1_300_000) {
         return calculatedTax * 0.55; // 55%
     }
-    
+
     return 715_000 + (calculatedTax - 1_300_000) * 0.30; // 71만5천원 + 초과분의 30%
 }
 
@@ -114,7 +114,7 @@ export function earnedIncomeTaxDeduction(calculatedTax: number): number {
 export function applyEarnedIncomeTaxDeduction(calculatedTax: number, totalSalary: number): number {
     const deductionAmount = earnedIncomeTaxDeduction(calculatedTax);
     const deductionLimit = earnedIncomeTaxDeductionLimit(totalSalary);
-    
+
     return Math.min(deductionAmount, deductionLimit);
 }
 
@@ -160,12 +160,10 @@ function calcNetByAnnualKRW(annualGross: number) {
         earnedIncome - basicPersonalDeduction - annualSocialTotal
     );
 
-    console.log("annualTaxable", annualTaxable);
-
     // (3) 소득세(누진공제식) + 지방소득세
     const incomeTax = progressiveTaxByQuickDeduction(annualTaxable);
     const localTax = Math.floor(incomeTax * CONFIG.tax.localOnIncomeTax);
-    
+
     // 근로소득세액공제 적용
     const taxDeduction = applyEarnedIncomeTaxDeduction(incomeTax, annualTotalSalary);
     const finalIncomeTax = Math.max(0, incomeTax - taxDeduction);

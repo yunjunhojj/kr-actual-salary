@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { 
-    earnedIncomeDeduction, 
+import {
+    earnedIncomeDeduction,
     progressiveTaxByQuickDeduction,
     earnedIncomeTaxDeductionLimit,
     earnedIncomeTaxDeduction,
@@ -122,7 +122,7 @@ describe('근로소득세액공제 한도 함수 테스트', () => {
     it('총급여 3,300만원 초과 7,000만원 이하인 경우', () => {
         // 5,000만원: 74만원 - (5,000만원 - 3,300만원) × 0.008 = 74만원 - 13.6만원 = 60.4만원 → 최소 66만원
         expect(earnedIncomeTaxDeductionLimit(50_000_000)).toBe(660_000);
-        
+
         // 7,000만원: 74만원 - (7,000만원 - 3,300만원) × 0.008 = 74만원 - 29.6만원 = 44.4만원 → 최소 66만원
         expect(earnedIncomeTaxDeductionLimit(70_000_000)).toBe(660_000);
     });
@@ -130,7 +130,7 @@ describe('근로소득세액공제 한도 함수 테스트', () => {
     it('총급여 7,000만원 초과 12,000만원 이하인 경우', () => {
         // 10,000만원: 66만원 - (10,000만원 - 7,000만원) × 0.5 = 66만원 - 150만원 = -84만원 → 최소 50만원
         expect(earnedIncomeTaxDeductionLimit(100_000_000)).toBe(500_000);
-        
+
         // 12,000만원: 66만원 - (12,000만원 - 7,000만원) × 0.5 = 66만원 - 250만원 = -184만원 → 최소 50만원
         expect(earnedIncomeTaxDeductionLimit(120_000_000)).toBe(500_000);
     });
@@ -150,7 +150,7 @@ describe('근로소득세액공제 계산 함수 테스트', () => {
     it('산출세액 130만원 초과인 경우 71만5천원 + 초과분의 30%', () => {
         // 200만원: 71만5천원 + (200만원 - 130만원) × 30% = 71.5만원 + 21만원 = 92.5만원
         expect(earnedIncomeTaxDeduction(2_000_000)).toBe(925_000);
-        
+
         // 500만원: 71만5천원 + (500만원 - 130만원) × 30% = 71.5만원 + 111만원 = 182.5만원
         expect(earnedIncomeTaxDeduction(5_000_000)).toBe(1_825_000);
     });
@@ -160,7 +160,7 @@ describe('근로소득세액공제 최종 적용 함수 테스트', () => {
     it('산출세액이 한도보다 작은 경우', () => {
         const calculatedTax = 1_000_000; // 100만원
         const totalSalary = 50_000_000; // 5,000만원 (한도: 60.4만원)
-        
+
         const result = applyEarnedIncomeTaxDeduction(calculatedTax, totalSalary);
         expect(result).toBe(550_000); // 100만원 × 55% = 55만원 (한도보다 작음)
     });
@@ -168,7 +168,7 @@ describe('근로소득세액공제 최종 적용 함수 테스트', () => {
     it('산출세액이 한도보다 큰 경우', () => {
         const calculatedTax = 2_000_000; // 200만원
         const totalSalary = 30_000_000; // 3,000만원 (한도: 74만원)
-        
+
         const result = applyEarnedIncomeTaxDeduction(calculatedTax, totalSalary);
         expect(result).toBe(740_000); // 한도 74만원 적용
     });
@@ -176,7 +176,7 @@ describe('근로소득세액공제 최종 적용 함수 테스트', () => {
     it('산출세액이 0인 경우', () => {
         const calculatedTax = 0;
         const totalSalary = 50_000_000;
-        
+
         const result = applyEarnedIncomeTaxDeduction(calculatedTax, totalSalary);
         expect(result).toBe(0);
     });

@@ -1,6 +1,6 @@
 {
   "name": "kr-actual-salary",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "연봉(만원 단위) 입력 → 월/연 실수령액 계산 CLI",
   "type": "module",
   "bin": {
