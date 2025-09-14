@@ -1,0 +1,26 @@
+{
+  "name": "kr-actual-salary",
+  "version": "0.1.0",
+  "description": "연봉(만원 단위) 입력 → 월/연 실수령액 계산 CLI",
+  "type": "module",
+  "bin": {
+    "kr-actual-salary": "dist/index.js"
+  },
+  "scripts": {
+    "dev": "ts-node src/index.ts",
+    "build": "tsup src/index.ts --format esm --sourcemap --clean",
+    "start": "node dist/index.js"
+  },
+  "keywords": [
+    "salary",
+    "net pay",
+    "korea",
+    "cli"
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^24.4.0",
+    "tsup": "^8.0.0",
+    "typescript": "^5.0.0"
+  }
+}
