@@ -8,11 +8,19 @@
  * 필요 시 아래 상수만 업데이트.
  */
 import readline from "readline";
+import type {
+  SalaryCalculationConfig,
+  SalaryCalculationResult,
+  RoundingMode,
+  RoundingFunction,
+  FormatterFunction,
+  SalaryCalculator,
+} from "./types.js";
 
 // ------------------------------
 // 1) 정책 상수
 // ------------------------------
-const CONFIG = {
+const CONFIG: SalaryCalculationConfig = {
     currency: "KRW",
     periodsPerYear: 12 as const,
     rounding: "floor" as const, // floor|round|ceil
@@ -59,10 +67,10 @@ const CONFIG = {
 // ------------------------------
 // 2) 유틸
 // ------------------------------
-type Rounding = "floor" | "round" | "ceil";
-const round = (x: number, mode: Rounding) =>
+const round: RoundingFunction = (x: number, mode: RoundingMode): number =>
     mode === "floor" ? Math.floor(x) : mode === "ceil" ? Math.ceil(x) : Math.round(x);
-const fmt = (n: number) => n.toLocaleString("ko-KR");
+
+const fmt: FormatterFunction = (n: number): string => n.toLocaleString("ko-KR");
 
 // 근로소득공제(총급여 기준, 2023~2024)
 export function earnedIncomeDeduction(totalSalary: number): number {
@@ -121,7 +129,7 @@ export function applyEarnedIncomeTaxDeduction(calculatedTax: number, totalSalary
 // ------------------------------
 // 3) 핵심 계산
 // ------------------------------
-function calcNetByAnnualKRW(annualGross: number) {
+const calcNetByAnnualKRW: SalaryCalculator = (annualGross: number): SalaryCalculationResult => {
     const P = CONFIG.periodsPerYear;
 
     // 분리: 월 총액 vs 과세되는 월 급여
@@ -219,15 +227,15 @@ function calcNetByAnnualKRW(annualGross: number) {
             finalLocalTax: round(finalLocalTax, CONFIG.rounding)
         }
     };
-}
+};
 
 // ------------------------------
 // 4) CLI 입출력
 // ------------------------------
 const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
-const ask = (q: string) => new Promise<string>((res) => rl.question(q, res));
+const ask = (q: string): Promise<string> => new Promise<string>((res) => rl.question(q, res));
 
-(async () => {
+(async (): Promise<void> => {
     console.log("======================================");
     console.log("     KR Actual Salary (간편 계산기)     ");
     console.log("======================================");
@@ -239,8 +247,8 @@ const ask = (q: string) => new Promise<string>((res) => rl.question(q, res));
         process.exit(1);
     }
 
-    const annualKRW = parseInt(input, 10) * 10_000;
-    const r = calcNetByAnnualKRW(annualKRW);
+    const annualKRW: number = parseInt(input, 10) * 10_000;
+    const r: SalaryCalculationResult = calcNetByAnnualKRW(annualKRW);
 
     console.log("--------------------------------------");
     console.log(`연봉(총액): ${fmt(r.gross.annual)}원`);
@@ -249,8 +257,8 @@ const ask = (q: string) => new Promise<string>((res) => rl.question(q, res));
     console.log(`과세급여(월): ${fmt(r.taxableBase.monthly)}원`);
     console.log("--------------------------------------");
     console.log("공제(월):");
-    Object.entries(r.deductions.monthly).forEach(([k, v]) =>
-        console.log(`  - ${k}: ${fmt(v as number)}원`)
+    Object.entries(r.deductions.monthly).forEach(([k, v]: [string, number]) =>
+        console.log(`  - ${k}: ${fmt(v)}원`)
     );
     console.log(`  - (소계) 사회보험 합계: ${fmt(r.deductions.monthlySocial)}원`);
     console.log(`  - (소계) 소득세/지방세: ${fmt(r.deductions.monthlyTaxes)}원`);
