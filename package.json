@@ -1,10 +1,19 @@
 {
   "name": "kr-actual-salary",
-  "version": "0.1.1",
-  "description": "연봉(만원 단위) 입력 → 월/연 실수령액 계산 CLI",
+  "version": "1.0.0",
+  "description": "한국 연봉 실수령액 계산 CLI 도구 - 2025년 세법 기준",
   "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md"
+  ],
   "bin": {
     "kr-actual-salary": "dist/index.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   },
   "scripts": {
     "dev": "ts-node --esm src/index.ts",
@@ -19,15 +28,35 @@
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",
     "clean": "rm -rf dist",
-    "prebuild": "yarn clean"
+    "prebuild": "yarn clean",
+    "prepublishOnly": "yarn build && yarn test:run"
   },
   "keywords": [
     "salary",
-    "net pay",
+    "net-pay",
     "korea",
-    "cli"
+    "korean",
+    "tax-calculator",
+    "salary-calculator",
+    "cli",
+    "typescript",
+    "실수령액",
+    "연봉계산",
+    "세금계산"
   ],
+  "author": {
+    "name": "윤준호",
+    "email": "yunjunhojj@gmail.com"
+  },
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/kr-actual-salary.git"
+  },
+  "homepage": "https://github.com/yourusername/kr-actual-salary#readme",
+  "bugs": {
+    "url": "https://github.com/yourusername/kr-actual-salary/issues"
+  },
   "devDependencies": {
     "@types/node": "^22.10.0",
     "@typescript-eslint/eslint-plugin": "^8.0.0",
