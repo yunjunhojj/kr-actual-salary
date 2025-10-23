@@ -1,21 +1,16 @@
-import { defineConfig } from 'tsup';
+import { defineConfig } from "tsup";
 
 export default defineConfig({
-  entry: ['src/index.ts'],
-  format: ['esm'],
-  target: 'es2022',
-  outDir: 'dist',
+  entry: ["src/index.ts"],
+  format: ["esm"],
+  target: "es2022",
+  outDir: "dist",
   clean: true,
   sourcemap: true,
   dts: true,
   minify: false,
   splitting: false,
   bundle: true,
-  platform: 'node',
+  platform: "node",
   external: [],
-  esbuildOptions(options) {
-    options.banner = {
-      js: '#!/usr/bin/env node',
-    };
-  },
 });
