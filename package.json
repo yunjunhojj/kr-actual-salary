@@ -1,6 +1,6 @@
 {
   "name": "kr-actual-salary",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "한국 연봉 실수령액 계산 CLI 도구 - 2025년 세법 기준",
   "type": "module",
   "main": "dist/index.js",
